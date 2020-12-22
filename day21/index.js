@@ -1,6 +1,6 @@
 const fs = require("fs");
 const _ = require("lodash");
-const input = fs.readFileSync(__dirname + "/input.txt").toString();
+const input = fs.readFileSync(__dirname + "/example.txt").toString();
 
 class Parser {
   constructor(inputString) {
@@ -53,6 +53,8 @@ class Analyzer {
     const discoveredAllergensMap = new Map();
     discoveredAllergensMap.set("allergens", new Set());
     discoveredAllergensMap.set("ingredients", new Set());
+    const allergenIngredientsMap = new Map();
+
     while (
       allergenSuspectsMap.size > discoveredAllergensMap.get("allergens").size
     ) {
@@ -66,6 +68,10 @@ class Analyzer {
               .get("ingredients")
               .add(remainingIngredientsList[0]);
             discoveredAllergensMap.get("allergens").add(allergenString);
+            allergenIngredientsMap.set(
+              allergenString,
+              remainingIngredientsList[0]
+            );
           }
         }
       );
@@ -75,7 +81,16 @@ class Analyzer {
       .flatMap((f) => f.ingredients)
       .filter((s) => !discoveredAllergensMap.get("ingredients").has(s));
 
-    return safeIngredientsList;
+    return {
+      safeIngredientsList,
+      allergenIngredientsList: Array.from(allergenIngredientsMap.entries()).map(
+        ([allergenString, ingredientString]) => ({
+          allergen: allergenString,
+          ingredient: ingredientString,
+        })
+      ),
+    };
   }
 }
+
 module.exports = { Analyzer, Parser };

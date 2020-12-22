@@ -22,10 +22,42 @@ describe("main test case", () => {
   it("should be able to analyze food", () => {
     const food = new Parser(exampleString).parse();
 
-    const safeIngredientsList = new Analyzer().listSafeIngredients(food);
+    const safeIngredientsList = new Analyzer().listSafeIngredients(food)
+      .safeIngredientsList;
     expect(safeIngredientsList.filter((s) => s === "kfcds").length).toBe(1);
     expect(safeIngredientsList.filter((s) => s === "nhms").length).toBe(1);
     expect(safeIngredientsList.filter((s) => s === "sbzzf").length).toBe(2);
     expect(safeIngredientsList.filter((s) => s === "trh").length).toBe(1);
+  });
+
+  it("should be able to tell which ingredient is which allergen", () => {
+    const food = new Parser(exampleString).parse();
+
+    const allergenIngredientsList = new Analyzer().listSafeIngredients(food)
+      .allergenIngredientsList;
+    expect(
+      allergenIngredientsList.filter((s) => s.allergen === "dairy")
+    ).toEqual([
+      {
+        allergen: "dairy",
+        ingredient: "mxmxvkd",
+      },
+    ]);
+    expect(
+      allergenIngredientsList.filter((s) => s.allergen === "fish")
+    ).toEqual([
+      {
+        allergen: "fish",
+        ingredient: "sqjhc",
+      },
+    ]);
+    expect(allergenIngredientsList.filter((s) => s.allergen === "soy")).toEqual(
+      [
+        {
+          allergen: "soy",
+          ingredient: "fvjkl",
+        },
+      ]
+    );
   });
 });
