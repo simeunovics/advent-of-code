@@ -29,6 +29,7 @@ class Game {
     const player1Cards = player1CardsList;
     const player2Cards = player2CardsList;
     const rounds = new Set();
+    const masterGame = game === 1;
     let round = 0;
 
     while (true) {
@@ -36,7 +37,6 @@ class Game {
       // Before game starts if there was exactly the same game before player 1 wins
       const key = this.createHashKey(player1Cards, player2Cards);
       if (rounds.has(key)) {
-        // console.log(`Short-curcit win: Game: ${game} Round: ${round}`);
         return {
           winner: "PLAYER1",
           player1Cards,
@@ -46,14 +46,13 @@ class Game {
       }
       rounds.add(key);
 
-      game === 1 &&
+      masterGame &&
         console.log(
           `Game: ${game}: Round: ${round}\n\t Player 1: ${player1Cards.join(
             ","
           )} \n\t Player 2: ${player2Cards.join(",")}`
         );
       if (player1Cards.length === 0 || player2Cards.length === 0) {
-        // console.log(`WON: Game: ${game} Round: ${round}`);
         return {
           winner: player2Cards.length ? "PLAYER2" : "PLAYER1",
           winnerCards: [...(player2Cards.length ? player2Cards : player1Cards)],
@@ -68,7 +67,7 @@ class Game {
       // winners card is above looser card
       const player1Draw = player1Cards.shift();
       const player2Draw = player2Cards.shift();
-      game === 1 &&
+      masterGame &&
         console.log(
           `Game: ${game}: Round: ${round}\n\t Player 1: ${player1Draw} \n\t Player 2: ${player2Draw}`
         );
@@ -86,16 +85,14 @@ class Game {
         player1Cards.length >= player1Draw &&
         player2Cards.length >= player2Draw
       ) {
-        game === 1 && console.log("Entering recursion");
+        masterGame && console.log("Entering recursion");
         const winner = new Game().playRecursive(
-          [...player1Cards.slice(0, player1Draw)],
-          [...player2Cards.slice(0, player2Draw)],
+          player1Cards.slice(0, player1Draw),
+          player2Cards.slice(0, player2Draw),
           ++game
         );
-        game === 1 && console.log("Done wih recursion");
-        // const winner = this.playRecursive(
+        masterGame && console.log("Done wih recursion");
 
-        // );
         // check who won that sub-game
         const isPlayer1SubGameWinner = winner.winner === "PLAYER1";
         if (isPlayer1SubGameWinner) {
@@ -149,20 +146,104 @@ class Game {
   }
 }
 
+const createHashKey = (player1Cards, player2Cards) => {
+  return player1Cards.join(",") + "_" + player2Cards.join(",");
+};
+let masterGame = false;
+const gamePlayFnc = (player1Cards, player2Cards, game = 1) => {
+  const seen = new Set();
+  let round = 0;
+  const log = (...args) => {
+    game === 1 && console.log(...args);
+  };
+
+  while (true) {
+    round++;
+    // Before game starts if there was exactly the same game before player 1 wins
+    const key = createHashKey(player1Cards, player2Cards);
+    if (seen.has(key)) return { winner: "PLAYER1", winnerCards: player1Cards };
+    seen.add(key);
+
+    log(
+      `Game: ${game}: Round: ${round}\n\t Player 1: ${player1Cards.join(
+        ","
+      )} \n\t Player 2: ${player2Cards.join(",")}`
+    );
+    if (player1Cards.length === 0 || player2Cards.length === 0) {
+      return {
+        winner: player2Cards.length ? "PLAYER2" : "PLAYER1",
+        winnerCards: player2Cards.length ? player2Cards : player1Cards,
+      };
+    }
+
+    // winner keeps both cards
+    // winners card is above looser card
+    const player1Draw = player1Cards.shift();
+    const player2Draw = player2Cards.shift();
+    log(
+      `Game: ${game}: Round: ${round}\n\t Player 1: ${player1Draw} \n\t Player 2: ${player2Draw}`
+    );
+
+    /**
+     * If both players have at least as many cards remaining in their deck
+     * as the value of the card they just drew, the winner of the round
+     * is determined by playing a new game of Recursive Combat.
+     */
+    // if (
+    //   player1Draw <= player1Cards.length &&
+    //   player2Draw <= player2Cards.length
+    // ) {
+    if (
+      player1Cards.length >= player1Draw &&
+      player2Cards.length >= player2Draw
+    ) {
+      masterGame && console.log("Entering recursion");
+      const copy1 = player1Cards.slice(0, player1Draw);
+      const copy2 = player2Cards.slice(0, player2Draw);
+      const subGameWinner = gamePlayFnc([...copy1], [...copy2], game + 1);
+      log(`Arguments: #1: ${copy1.join(",")} \t #2: ${copy2.join(",")}`);
+      masterGame && console.log("Done wih recursion");
+
+      // check who won that sub-game
+      const isPlayer1SubGameWinner = subGameWinner.winner === "PLAYER1";
+      log(`Master game winner is: ${subGameWinner.winner}`, { subGameWinner });
+      if (isPlayer1SubGameWinner) {
+        // player 1 is winner
+        player1Cards.push(player1Draw, player2Draw);
+      } else {
+        // Player 2 is winner
+        player2Cards.push(player2Draw, player1Draw);
+      }
+    } else {
+      if (player1Draw > player2Draw) {
+        // player 1 is winner
+        player1Cards.push(player1Draw, player2Draw);
+      } else {
+        // Player 2 is winner
+        player2Cards.push(player2Draw, player1Draw);
+      }
+    }
+  }
+};
+
 class Score {
   constructor(winnerCards) {
     this.winnerCards = winnerCards;
   }
 
   calculateScore() {
-    let sum = 0;
-    const totalNumberOfCards = this.winnerCards.length;
-    for (let i = totalNumberOfCards; i > 0; i--) {
-      const card = this.winnerCards[totalNumberOfCards - i];
-      sum += card * i;
-    }
+    let multiplier = 1;
+    return this.winnerCards.reverse().reduce((prev, next) => {
+      return prev + next * multiplier++;
+    }, 0);
+    // let sum = 0;
+    // const totalNumberOfCards = this.winnerCards.length;
+    // for (let i = totalNumberOfCards; i > 0; i--) {
+    //   const card = this.winnerCards[totalNumberOfCards - i];
+    //   sum += card * i;
+    // }
 
-    return sum;
+    // return sum;
   }
 }
 
@@ -170,4 +251,5 @@ module.exports = {
   Parser,
   Game,
   Score,
+  gamePlayFnc,
 };

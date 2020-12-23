@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { Parser, Game, Score } = require("./index");
+const { Parser, Game, Score, gamePlayFnc } = require("./index");
 
 describe("day22 Test Case", () => {
   const exampleInputString = fs
@@ -44,13 +44,25 @@ describe("day22 Test Case", () => {
     expect(gamePlayResult.winnerCards).toEqual([7, 5, 6, 2, 4, 1, 10, 8, 9, 3]);
   });
 
+  it("should be able to play on loop input", () => {
+    const loopInputString = fs.readFileSync(`${__dirname}/loop.txt`).toString();
+    const parsedCardsObject = new Parser().parse(loopInputString);
+    const gamePlayResult = gamePlayFnc(
+      parsedCardsObject.player1,
+      parsedCardsObject.player2
+    );
+    const score = new Score(gamePlayResult.winnerCards).calculateScore();
+    expect(score).toBe(105);
+  });
   it("should be able to play on real input", () => {
     const realInputString = fs
       .readFileSync(`${__dirname}/input.txt`)
       .toString();
     const parsedCardsObject = new Parser().parse(realInputString);
-    const game = new Game(parsedCardsObject.player1, parsedCardsObject.player2);
-    const gamePlayResult = game.playRecursive();
+    const gamePlayResult = new Game().playRecursive(
+      parsedCardsObject.player1,
+      parsedCardsObject.player2
+    );
     const score = new Score(gamePlayResult.winnerCards).calculateScore();
     expect(score).toBe(31120);
   });

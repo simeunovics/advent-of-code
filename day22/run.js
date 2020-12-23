@@ -1,11 +1,15 @@
 const fs = require("fs");
-const { Parser, Game, Score } = require("./index");
+const { Parser, Game, Score, gamePlayFnc } = require("./index");
 
 (function () {
   const input = fs.readFileSync(__dirname + "/input.txt").toString();
   // const input = fs.readFileSync(__dirname + "/example.txt").toString();
   const parsedCardsObject = new Parser().parse(input);
-  const gamePlayResult = new Game().playRecursive(
+  // const gamePlayResult = new Game().playRecursive(
+  //   parsedCardsObject.player1,
+  //   parsedCardsObject.player2
+  // );
+  const gamePlayResult = gamePlayFnc(
     parsedCardsObject.player1,
     parsedCardsObject.player2
   );
