@@ -64,6 +64,6 @@ describe("day22 Test Case", () => {
       parsedCardsObject.player2
     );
     const score = new Score(gamePlayResult.winnerCards).calculateScore();
-    expect(score).toBe(31120);
+    expect(score).toBe(33455);
   });
 });
